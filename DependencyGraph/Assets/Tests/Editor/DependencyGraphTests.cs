@@ -24,9 +24,11 @@ namespace Tests
         [Test]
         public void IfTypeIsNotValidGetClassDependenciesIsNotCalled()
         {
-            _typeValidator.ValidType(typeof(int)).Returns(false);
+            var type = typeof(int);
+            
+            _typeValidator.ValidType(type).Returns(false);
 
-            _dependencyGraph.GetDependencies(typeof(int));
+            _dependencyGraph.GetDependencies(type);
 
             _reflectionUtils.DidNotReceive().GetClassDependencies(Arg.Any<Type>());
         }
@@ -34,11 +36,13 @@ namespace Tests
         [Test]
         public void IfTypeIsValidGetClassDependenciesIsCalled()
         {
-            _typeValidator.ValidType(typeof(int)).Returns(true);
+            var type = typeof(int);
+            
+            _typeValidator.ValidType(type).Returns(true);
 
-            _dependencyGraph.GetDependencies(typeof(int));
+            _dependencyGraph.GetDependencies(type);
 
-            _reflectionUtils.Received(1).GetClassDependencies(typeof(int));
+            _reflectionUtils.Received(1).GetClassDependencies(type);
         }
 
         [Test]

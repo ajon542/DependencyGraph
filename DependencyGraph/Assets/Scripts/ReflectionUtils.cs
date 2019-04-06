@@ -37,8 +37,7 @@ public class ReflectionUtils : IReflectionUtils
     {
         var dependentTypes = type.GetConstructors()
             .SelectMany(p => p.GetParameters())
-            .Select(pi => pi.ParameterType)
-            .Where(t => t != type);
+            .Select(pi => pi.ParameterType);
 
         return dependentTypes;
     }
@@ -61,25 +60,21 @@ public class ReflectionUtils : IReflectionUtils
     {
         var dependentTypes = type.GetMethods(_flags)
             .SelectMany(p => p.GetParameters())
-            .Select(pi => pi.ParameterType)
-            .Where(t => t != type);
-
+            .Select(pi => pi.ParameterType);
         return dependentTypes;
     }
 
     public IEnumerable<Type> GetFieldDependencies(Type type)
     {
         var dependentTypes = type.GetFields(_flags)
-            .Select(f => f.FieldType)
-            .Where(t => t != type);
+            .Select(f => f.FieldType);
         return dependentTypes;
     }
 
     public IEnumerable<Type> GetPropertyDependencies(Type type)
     {
         var dependentTypes = type.GetProperties(_flags)
-            .Select(f => f.PropertyType)
-            .Where(t => t != type);
+            .Select(f => f.PropertyType);
         return dependentTypes;
     }
 
@@ -88,8 +83,7 @@ public class ReflectionUtils : IReflectionUtils
         var dependentTypes = type.GetMethods()
             .Where(m => m.GetMethodBody() != null)
             .SelectMany(m => m.GetMethodBody().LocalVariables)
-            .Select(lv => lv.LocalType)
-            .Where(t => t != type);
+            .Select(lv => lv.LocalType);
         return dependentTypes;
     }
 }
