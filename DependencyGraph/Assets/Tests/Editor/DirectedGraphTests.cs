@@ -24,15 +24,42 @@ namespace Tests
         {
             _directedGraph.AddNode(1);
             
-            Assert.IsTrue(_directedGraph.Contains(1));
+            Assert.IsTrue(_directedGraph.ContainsNode(1));
+        }
+        
+        [Test]
+        public void GraphContainsEdgeAfterAddingEdge()
+        {
+            _directedGraph.AddEdge(1, 2);
+            Assert.IsTrue(_directedGraph.ContainsEdge(1, 2));
+        }
+        
+        [Test]
+        public void GraphContainsEdgeIsOneDirection()
+        {
+            _directedGraph.AddEdge(1, 2);
+            Assert.IsFalse(_directedGraph.ContainsEdge(2, 1));
         }
 
         [Test]
         public void GraphContainsBothNodesAfterAddingEdge()
         {
             _directedGraph.AddEdge(1, 2);
-            Assert.IsTrue(_directedGraph.Contains(1));
-            Assert.IsTrue(_directedGraph.Contains(2));
+            Assert.IsTrue(_directedGraph.ContainsNode(1));
+            Assert.IsTrue(_directedGraph.ContainsNode(2));
+        }
+        
+        [Test]
+        public void GraphContainsEdgeAfterAddingAndCreatingEdgeSeparately()
+        {
+            _directedGraph.AddNode(1);
+            _directedGraph.AddNode(2);
+            
+            Assert.IsFalse(_directedGraph.ContainsEdge(1, 2));
+            
+            _directedGraph.AddEdge(1, 2);
+            
+            Assert.IsTrue(_directedGraph.ContainsEdge(1, 2));
         }
 
         [Test]

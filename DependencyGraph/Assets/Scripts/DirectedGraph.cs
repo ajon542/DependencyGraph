@@ -7,7 +7,8 @@ public interface IDirectedGraph<T>
     int NodeCount { get; }
     void AddNode(T node);
     void AddEdge(T node1, T node2);
-    bool Contains(T node);
+    bool ContainsNode(T node);
+    bool ContainsEdge(T node1, T node2);
     List<T> GetNeighbours(T node);
 }
 
@@ -27,7 +28,7 @@ public class DirectedGraph<T> : IDirectedGraph<T>
 
     public void AddEdge(T node1, T node2)
     {
-        if (graph.ContainsKey(node1) && graph[node1].Contains(node2))
+        if (ContainsEdge(node1, node2))
             return;
 
         AddNode(node1);
@@ -36,9 +37,14 @@ public class DirectedGraph<T> : IDirectedGraph<T>
         graph[node1].Add(node2);
     }
 
-    public bool Contains(T node)
+    public bool ContainsNode(T node)
     {
         return graph.ContainsKey(node);
+    }
+
+    public bool ContainsEdge(T node1, T node2)
+    {
+        return graph.ContainsKey(node1) && graph[node1].Contains(node2);
     }
 
     public List<T> GetNeighbours(T node)
