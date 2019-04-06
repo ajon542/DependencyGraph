@@ -127,5 +127,74 @@ namespace Tests
 
             _directedGraph.Received(1).AddEdge(typeA, typeA);
         }
+        
+        [Test]
+        public void AddEdgeIsCalledForEveryDependencyInTheChain()
+        {
+            var typeA = typeof(int);
+            var typeB = typeof(double);
+            var typeC = typeof(string);
+            var typeD = typeof(float);
+            var typeE = typeof(char);
+
+            _typeValidator.ValidType(Arg.Any<Type>()).Returns(true);
+
+            _reflectionUtils.GetClassDependencies(typeA)
+                .Returns(new HashSet<Type> {typeB});
+            
+            _reflectionUtils.GetClassDependencies(typeB)
+                .Returns(new HashSet<Type> {typeC});
+            
+            _reflectionUtils.GetClassDependencies(typeC)
+                .Returns(new HashSet<Type> {typeD});
+            
+            _reflectionUtils.GetClassDependencies(typeD)
+                .Returns(new HashSet<Type> {typeE});
+            
+            _reflectionUtils.GetClassDependencies(typeE)
+                .Returns(new HashSet<Type> {typeA});
+
+            _dependencyGraph.GetDependencies(typeA);
+
+            _reflectionUtils.Received(1).GetClassDependencies(typeA);
+            _reflectionUtils.Received(1).GetClassDependencies(typeB);
+            _reflectionUtils.Received(1).GetClassDependencies(typeC);
+            _reflectionUtils.Received(1).GetClassDependencies(typeD);
+            _reflectionUtils.Received(1).GetClassDependencies(typeE);
+
+            _directedGraph.Received(1).AddEdge(typeA, typeB);
+            _directedGraph.Received(1).AddEdge(typeB, typeC);
+            _directedGraph.Received(1).AddEdge(typeC, typeD);
+            _directedGraph.Received(1).AddEdge(typeD, typeE);
+            _directedGraph.Received(1).AddEdge(typeE, typeA);
+        }
+        
+        [Test]
+        public void AddEdgeIsCalledForMultipleDependenciesForAType()
+        {
+            var typeA = typeof(int);
+            var typeB = typeof(double);
+            var typeC = typeof(string);
+            var typeD = typeof(float);
+            var typeE = typeof(char);
+
+            _typeValidator.ValidType(Arg.Any<Type>()).Returns(true);
+
+            _reflectionUtils.GetClassDependencies(typeA)
+                .Returns(new HashSet<Type> {typeB, typeC, typeD, typeE});
+
+            _dependencyGraph.GetDependencies(typeA);
+
+            _reflectionUtils.Received(1).GetClassDependencies(typeA);
+            _reflectionUtils.Received(1).GetClassDependencies(typeB);
+            _reflectionUtils.Received(1).GetClassDependencies(typeC);
+            _reflectionUtils.Received(1).GetClassDependencies(typeD);
+            _reflectionUtils.Received(1).GetClassDependencies(typeE);
+
+            _directedGraph.Received(1).AddEdge(typeA, typeB);
+            _directedGraph.Received(1).AddEdge(typeA, typeC);
+            _directedGraph.Received(1).AddEdge(typeA, typeD);
+            _directedGraph.Received(1).AddEdge(typeA, typeE);
+        }
     }
 }
