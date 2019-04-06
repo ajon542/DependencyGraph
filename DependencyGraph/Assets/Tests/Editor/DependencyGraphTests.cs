@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using NSubstitute;
-using UnityEngine;
 
 namespace Tests
 {

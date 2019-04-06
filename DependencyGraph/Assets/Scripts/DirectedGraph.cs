@@ -1,51 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 public interface IDirectedGraph<T>
 {
-    int VertexCount { get; }
-    void AddVertex(T v);
-    void AddEdge(T v1, T v2);
-    bool Contains(T vertex);
-    List<T> GetNeighbours(T vertex);
+    int NodeCount { get; }
+    void AddNode(T node);
+    void AddEdge(T node1, T node2);
+    bool Contains(T node);
+    List<T> GetNeighbours(T node);
 }
 
 public class DirectedGraph<T> : IDirectedGraph<T>
 {
     public Dictionary<T, List<T>> graph = new Dictionary<T, List<T>>();
 
-    public int VertexCount => graph.Count;
+    public int NodeCount => graph.Count;
 
-    public void AddVertex(T v)
+    public void AddNode(T node)
     {
-        if (graph.ContainsKey(v))
+        if (graph.ContainsKey(node))
             return;
 
-        graph[v] = new List<T>();
+        graph[node] = new List<T>();
     }
 
-    public void AddEdge(T v1, T v2)
+    public void AddEdge(T node1, T node2)
     {
-        if (graph.ContainsKey(v1) && graph[v1].Contains(v2))
+        if (graph.ContainsKey(node1) && graph[node1].Contains(node2))
             return;
 
-        AddVertex(v1);
-        AddVertex(v2);
+        AddNode(node1);
+        AddNode(node2);
 
-        graph[v1].Add(v2);
+        graph[node1].Add(node2);
     }
 
-    public bool Contains(T vertex)
+    public bool Contains(T node)
     {
-        return graph.ContainsKey(vertex);
+        return graph.ContainsKey(node);
     }
 
-    public List<T> GetNeighbours(T vertex)
+    public List<T> GetNeighbours(T node)
     {
-        if (!graph.ContainsKey(vertex))
-            throw new System.Exception("vertex not found");
+        if (!graph.ContainsKey(node))
+            throw new Exception("node not found");
 
-        return new List<T>(graph[vertex]);
+        return new List<T>(graph[node]);
     }
 
     public override string ToString()
