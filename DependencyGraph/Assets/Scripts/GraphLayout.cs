@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector2 = UnityEngine.Vector2;
 
 public class GraphLayout : MonoBehaviour
 {
@@ -29,6 +31,8 @@ public class GraphLayout : MonoBehaviour
     
     private void Start()
     {
+        // We created a graph with integers as the nodes as these are used as
+        // indices into the List<Node> to update position/displacement for each node.
         _graph = new DirectedGraph<int>();
         _graph.AddEdge(0, 1);
         _graph.AddEdge(0, 2);
@@ -89,7 +93,8 @@ public class GraphLayout : MonoBehaviour
         // Set position
         for (int v = 0; v < _nodeList.Count; ++v)
         {
-            _nodeList[v].Position += _nodeList[v].Displacement.normalized;
+            Vector2 displacement = _nodeList[v].Displacement;
+            _nodeList[v].Position += displacement.normalized;
             _nodeGameObjects[v].transform.position = _nodeList[v].Position;
         }
     }
