@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 public interface IDirectedGraph<T>
@@ -10,6 +11,8 @@ public interface IDirectedGraph<T>
     bool ContainsNode(T node);
     bool ContainsEdge(T node1, T node2);
     List<T> GetNeighbours(T node);
+    List<T> Nodes();
+    List<Tuple<T, T>> Edges();
 }
 
 public class DirectedGraph<T> : IDirectedGraph<T>
@@ -53,6 +56,26 @@ public class DirectedGraph<T> : IDirectedGraph<T>
             throw new Exception("node not found");
 
         return new List<T>(graph[node]);
+    }
+
+    public List<T> Nodes()
+    {
+        return graph.Keys.ToList();
+    }
+
+    public List<Tuple<T, T>> Edges()
+    {
+        var edges = new List<Tuple<T, T>>();
+        
+        foreach (var kvp in graph)
+        {
+            foreach (var node in kvp.Value)
+            {
+                edges.Add(new Tuple<T, T>(kvp.Key, node));
+            }
+        }
+
+        return edges;
     }
 
     public override string ToString()
