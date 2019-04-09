@@ -10,13 +10,11 @@ public class GraphLayoutWindow : EditorWindow
     private GraphLayoutModel _graphLayoutModel;
     private DirectedGraph<int> _graph;
     private List<Tuple<int, int>> _edges;
-    private List<int> _nodes;
-
     private float _repulsiveForce = 300;
     private double _w;
     private double _h;
 
-    private List<Node> _nodeList;
+    private List<NodeModel> _nodeList;
 
     private DirectedGraph<int> GenerateRandomGraph(int nodeCount)
     {
@@ -50,19 +48,16 @@ public class GraphLayoutWindow : EditorWindow
     }
 
     private void OnGUI()
-    {
+    {        
         HandleEvents();
         
         _repulsiveForce = EditorGUILayout.FloatField("Repulsive Force", _repulsiveForce);
             
         if (GUILayout.Button("Create Graph"))
         {
-            Debug.Log($"width={_w}, height={_h}");
-
             _graph = GenerateRandomGraph(30);
-            
+
             _edges = _graph.Edges();
-            _nodes = _graph.Nodes();
             
             if (_window == null)
                 _window = GetWindow<GraphLayoutWindow>();
@@ -70,12 +65,13 @@ public class GraphLayoutWindow : EditorWindow
             _w = _window.position.width;
             _h = _window.position.height;
 
-            _nodeList = new List<Node>();
+            _nodeList = new List<NodeModel>();
 
-            foreach (var node in _nodes)
+            var graphNodes = _graph.Nodes();
+            foreach (var node in graphNodes)
             {
                 Vector2 position = (UnityEngine.Random.insideUnitCircle) + new Vector2((float)_w, (float)_h);
-                _nodeList.Add(new Node(position, Vector2.zero));
+                _nodeList.Add(new NodeModel(position, Vector2.zero));
             }
 
             _graphLayoutModel = new GraphLayoutModel(_graph, _nodeList, _repulsiveForce);
@@ -84,11 +80,7 @@ public class GraphLayoutWindow : EditorWindow
         if (_nodeList != null)
         {
             _graphLayoutModel.Integrate();
-            Repaint();
-        }
-
-        if (_nodeList != null)
-        {
+            
             _zoomArea = new Rect(0.0f, 75.0f, _window.position.width, _window.position.height);
             EditorZoomArea.Begin(_zoom, _zoomArea);
             
@@ -97,17 +89,27 @@ public class GraphLayoutWindow : EditorWindow
             for (int i = 0; i < _nodeList.Count; ++i)
             {
                 Vector2 position = _nodeList[i].Position;
-                GUI.Window(i, new Rect(position.x - (50.0f / 2), position.y - (50.0f / 2),50,50), DrawNodeView, $"Node{i}");   
+                var rect = GUI.Window(i, new Rect(
+                    position.x, 
+                    position.y,
+                    50,
+                    50), DrawNodeView, $"Node{i}");
+                _nodeList[i].Position = new Vector2(rect.x, rect.y);
             }
             
             foreach (var edge in _edges)
             {
-                Handles.DrawLine(_nodeList[edge.Item2].Position, _nodeList[edge.Item1].Position);
+                var node1Pos = new Vector2(_nodeList[edge.Item1].Position.x + 50.0f/2, _nodeList[edge.Item1].Position.y + 50.0f/2);
+                var node2Pos = new Vector2(_nodeList[edge.Item2].Position.x + 50.0f/2, _nodeList[edge.Item2].Position.y + 50.0f/2);
+
+                Handles.DrawLine(node1Pos, node2Pos);
             }
         
             EndWindows();
             
             EditorZoomArea.End();
+            
+            Repaint();
         }
     }
     
@@ -116,6 +118,7 @@ public class GraphLayoutWindow : EditorWindow
         GUI.DragWindow();
     }
     
+    // Zoom specific stuff...
     private const float kZoomMin = 0.1f;
     private const float kZoomMax = 10.0f;
 
@@ -158,6 +161,14 @@ public class GraphLayoutWindow : EditorWindow
             _zoomCoordsOrigin += delta;
 
             Event.current.Use();
+        }
+    }
+
+    public class NodeView
+    {
+        public NodeView(NodeModel model)
+        {
+            
         }
     }
 }
