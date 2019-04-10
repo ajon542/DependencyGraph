@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
+// TODO: Add nodes to the graph
+// TODO: Add edges to the graph
+// TODO: Remove nodes from the graph
+// TODO: Remove edges from the graph
+// TODO: Investigate different types of graphs
+
 public class GraphLayoutModel
 {
-    private DirectedGraph<int> _graph;
-    private List<NodeModel> _nodeModels;
-    private List<Tuple<int, int>> _edges;
+    private DirectedGraph<Type> _graph;
+    private Dictionary<Type, NodeModel> _nodeModels;
+    private List<Tuple<Type, Type>> _edges;
     private float _unitCircleSize;
     private float _k;
     
-    public GraphLayoutModel(DirectedGraph<int> graph, List<NodeModel> nodeModels, float unitCircleSize)
+    public GraphLayoutModel(DirectedGraph<Type> graph, Dictionary<Type, NodeModel> nodeModels, float unitCircleSize)
     {
         _graph = graph;
         _nodeModels = nodeModels;
@@ -24,15 +30,15 @@ public class GraphLayoutModel
     public void Integrate()
     {
         // Calculate repulsive forces for each node
-        Parallel.For(0, _nodeModels.Count, v =>
+        foreach (var v in _nodeModels)
         {
-            for (int u = 0; u < _nodeModels.Count; ++u)
+            foreach (var u in _nodeModels)
             {
-                if (v == u) continue;
-                Vector2 diff = _nodeModels[v].Position - _nodeModels[u].Position;
-                _nodeModels[v].Displacement += (diff.normalized) * RepulsiveForce(diff.magnitude, _k);
+                if (v.Key == u.Key) continue;
+                Vector2 diff = v.Value.Position - u.Value.Position;
+                v.Value.Displacement += (diff.normalized) * RepulsiveForce(diff.magnitude, _k);
             }
-        });
+        }
         
         // Calculate attractive forces based on the edges
         foreach (var edge in _edges)
@@ -44,11 +50,11 @@ public class GraphLayoutModel
         }
         
         // Set node position
-        for (int v = 0; v < _nodeModels.Count; ++v)
+        foreach(var kvp in _nodeModels)
         {
-            Vector2 displacement = _nodeModels[v].Displacement;
-            _nodeModels[v].Position += displacement.normalized;
-            _nodeModels[v].Displacement = Vector2.zero;
+            Vector2 displacement = kvp.Value.Displacement;
+            kvp.Value.Position += displacement.normalized;
+            kvp.Value.Displacement = Vector2.zero;
         }
     }
     

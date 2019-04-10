@@ -2,19 +2,24 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 public class GraphLayoutWindow : EditorWindow
 {
     private static GraphLayoutWindow _window;
 
     private GraphLayoutModel _graphLayoutModel;
-    private DirectedGraph<int> _graph;
-    private List<Tuple<int, int>> _edges;
+    private DirectedGraph<Type> _graph;
+    private List<Tuple<Type, Type>> _edges;
     private float _repulsiveForce = 300;
     private double _w;
     private double _h;
 
-    private List<NodeModel> _nodeList;
+    private float _nodeWidth = 150;
+    private float _nodeHeight = 50;
+
+    private Dictionary<Type, NodeModel> _nodeList;
 
     private DirectedGraph<int> GenerateRandomGraph(int nodeCount)
     {
@@ -41,7 +46,7 @@ public class GraphLayoutWindow : EditorWindow
     
     [MenuItem("Tools/Graph Layout")]
     private static void ShowEditor()
-    {
+    {        
         _window = GetWindow<GraphLayoutWindow>();
         _window.wantsMouseMove = true;
         _window.Show();
@@ -50,13 +55,28 @@ public class GraphLayoutWindow : EditorWindow
     private void OnGUI()
     {        
         HandleEvents();
-        
-        _repulsiveForce = EditorGUILayout.FloatField("Repulsive Force", _repulsiveForce);
-            
-        if (GUILayout.Button("Create Graph"))
-        {
-            _graph = GenerateRandomGraph(30);
 
+        _repulsiveForce = EditorGUILayout.FloatField("Repulsive Force", _repulsiveForce);
+        
+        if (GUILayout.Button("Get Dependencies"))
+        {
+            Assembly[] assembliesToSearch = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => a.ToString().StartsWith("Assembly-CSharp", StringComparison.Ordinal)).ToArray();
+    
+            var typesToSearch = assembliesToSearch
+                .SelectMany(t => t.GetTypes())
+                .Where(t => t.Namespace != null && 
+                            (t.Namespace.Contains("TestTypes")))
+                .ToArray();
+            
+            var reflectionUtils = new ReflectionUtils();
+            var typeValidator = new TypeValidator(typesToSearch);
+            _graph = new DirectedGraph<Type>();
+            var dependencyGraph = new DependencyGraph(reflectionUtils, _graph, typeValidator);
+            dependencyGraph.GetDependencies(typeof(TestTypes.TestA));
+            
+            Debug.Log(_graph.ToString());
+            
             _edges = _graph.Edges();
             
             if (_window == null)
@@ -65,13 +85,13 @@ public class GraphLayoutWindow : EditorWindow
             _w = _window.position.width;
             _h = _window.position.height;
 
-            _nodeList = new List<NodeModel>();
+            _nodeList = new Dictionary<Type, NodeModel>();
 
             var graphNodes = _graph.Nodes();
             foreach (var node in graphNodes)
             {
                 Vector2 position = (UnityEngine.Random.insideUnitCircle) + new Vector2((float)_w, (float)_h);
-                _nodeList.Add(new NodeModel(position, Vector2.zero));
+                _nodeList.Add(node, new NodeModel(position, Vector2.zero));
             }
 
             _graphLayoutModel = new GraphLayoutModel(_graph, _nodeList, _repulsiveForce);
@@ -86,21 +106,22 @@ public class GraphLayoutWindow : EditorWindow
             
             BeginWindows();
 
-            for (int i = 0; i < _nodeList.Count; ++i)
+            int windowIndex = 0;
+            foreach(var kvp in _nodeList)
             {
-                Vector2 position = _nodeList[i].Position;
-                var rect = GUI.Window(i, new Rect(
+                Vector2 position = kvp.Value.Position;
+                var rect = GUI.Window(windowIndex++, new Rect(
                     position.x, 
                     position.y,
-                    50,
-                    50), DrawNodeView, $"Node{i}");
-                _nodeList[i].Position = new Vector2(rect.x, rect.y);
+                    _nodeWidth,
+                    _nodeHeight), DrawNodeView, $"{kvp.Key}");
+                kvp.Value.Position = new Vector2(rect.x, rect.y);
             }
             
             foreach (var edge in _edges)
             {
-                var node1Pos = new Vector2(_nodeList[edge.Item1].Position.x + 50.0f/2, _nodeList[edge.Item1].Position.y + 50.0f/2);
-                var node2Pos = new Vector2(_nodeList[edge.Item2].Position.x + 50.0f/2, _nodeList[edge.Item2].Position.y + 50.0f/2);
+                var node1Pos = new Vector2(_nodeList[edge.Item1].Position.x + _nodeWidth/2, _nodeList[edge.Item1].Position.y + _nodeHeight/2);
+                var node2Pos = new Vector2(_nodeList[edge.Item2].Position.x + _nodeWidth/2, _nodeList[edge.Item2].Position.y + _nodeHeight/2);
 
                 Handles.DrawLine(node1Pos, node2Pos);
             }
@@ -161,14 +182,6 @@ public class GraphLayoutWindow : EditorWindow
             _zoomCoordsOrigin += delta;
 
             Event.current.Use();
-        }
-    }
-
-    public class NodeView
-    {
-        public NodeView(NodeModel model)
-        {
-            
         }
     }
 }
