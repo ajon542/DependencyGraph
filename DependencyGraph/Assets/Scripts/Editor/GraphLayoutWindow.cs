@@ -107,21 +107,27 @@ public class GraphLayoutWindow : EditorWindow
             BeginWindows();
 
             int windowIndex = 0;
+            float zoomOffsetX = 0.0f - _zoomCoordsOrigin.x;
+            float zoomOffsetY = 0.0f - _zoomCoordsOrigin.y;
             foreach(var kvp in _nodeList)
             {
                 Vector2 position = kvp.Value.Position;
                 var rect = GUI.Window(windowIndex++, new Rect(
-                    position.x, 
-                    position.y,
+                    zoomOffsetX + position.x, 
+                    zoomOffsetY + position.y,
                     _nodeWidth,
                     _nodeHeight), DrawNodeView, $"{kvp.Key}");
-                kvp.Value.Position = new Vector2(rect.x, rect.y);
+                kvp.Value.Position = new Vector2(rect.x - zoomOffsetX, rect.y - zoomOffsetY);
             }
             
             foreach (var edge in _edges)
             {
-                var node1Pos = new Vector2(_nodeList[edge.Item1].Position.x + _nodeWidth/2, _nodeList[edge.Item1].Position.y + _nodeHeight/2);
-                var node2Pos = new Vector2(_nodeList[edge.Item2].Position.x + _nodeWidth/2, _nodeList[edge.Item2].Position.y + _nodeHeight/2);
+                var node1Pos = new Vector2(
+                    zoomOffsetX + _nodeList[edge.Item1].Position.x + _nodeWidth/2, 
+                    zoomOffsetY + _nodeList[edge.Item1].Position.y + _nodeHeight/2);
+                var node2Pos = new Vector2(
+                    zoomOffsetX + _nodeList[edge.Item2].Position.x + _nodeWidth/2, 
+                    zoomOffsetY + _nodeList[edge.Item2].Position.y + _nodeHeight/2);
 
                 Handles.DrawLine(node1Pos, node2Pos);
             }
@@ -162,12 +168,13 @@ public class GraphLayoutWindow : EditorWindow
             Vector2 screenCoordsMousePos = Event.current.mousePosition;
             Vector2 delta = Event.current.delta;
             Vector2 zoomCoordsMousePos = ConvertScreenCoordsToZoomCoords(screenCoordsMousePos);
+                        
             float zoomDelta = -delta.y / 150.0f;
             float oldZoom = _zoom;
             _zoom += zoomDelta;
             _zoom = Mathf.Clamp(_zoom, kZoomMin, kZoomMax);
             _zoomCoordsOrigin += (zoomCoordsMousePos - _zoomCoordsOrigin) - (oldZoom / _zoom) * (zoomCoordsMousePos - _zoomCoordsOrigin);
-
+            
             Event.current.Use();
         }
 
